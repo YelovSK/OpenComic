@@ -3427,6 +3427,11 @@ function isOpds(path)
 	return false;
 }
 
+function isOpdsFile(path)
+{
+	return /^(?:\.[\/\\]+)?opdsfs?\:[\/\\]{1,2}/.test(path);
+}
+
 function isBase64(path)
 {
 	if(/^base64,/.test(path))
@@ -4240,6 +4245,7 @@ module.exports = {
 	isCompressed: isCompressed,
 	isServer: isServer,
 	isOpds: isOpds,
+	isOpdsFile: isOpdsFile,
 	isBase64: isBase64,
 	setServerInOfflineMode: setServerInOfflineMode,
 	serverInOfflineMode: function(){return serverInOfflineMode},

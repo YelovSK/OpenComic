@@ -486,7 +486,7 @@ function openBestAcquisitionLink(acquisitionLinks, downloadFiles)
 
 	console.log(bestLink);
 
-	dom.loadIndexPage(true, bestLink.path, false, false, bestLink.path);
+	dom.loadIndexPage(true, bestLink.path, false, false, p.dirname(bestLink.path));
 	// dom.loadIndexPage(true, bestLink.path, false, false, bestLink.mainPath);
 
 	const name = dom.metadataPathName({

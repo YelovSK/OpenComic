@@ -544,6 +544,22 @@ function base64ToUrl(path)
 	return atob(basename.replace(/^base64\,/, ''));
 }
 
+function downloadUrl(path)
+{
+	const dirname = p.dirname(path);
+	const basename = p.basename(path).replace(/\.[^\.]*$/, '');
+
+	let url = /^base64\,/.test(basename) ? base64ToUrl(basename) : atob(basename);
+
+	if(!/^https?:/.test(url))
+	{
+		url = p.join(dirname, url);
+		url = serverClient.posixPath(url).replace(/^opdsf/, 'http');
+	}
+
+	return url;
+}
+
 function getPath(item, currentUrl, mainPath)
 {
 	const links = getLinks(item);
@@ -576,5 +592,6 @@ module.exports = {
 	atob: atob,
 	base64: base64,
 	base64ToUrl: base64ToUrl,
+	downloadUrl: downloadUrl,
 	getPath: getPath,
 };

@@ -1633,16 +1633,7 @@ var client = function(path) {
 					{
 						const downloading = _this.setDownloading(path, filePath);
 
-						const dirname = p.dirname(path);
-						const basename = p.basename(path).replace(/\.[^\.]*$/, '');
-
-						let url = /^base64\,/.test(basename) ? opds.opds.base64ToUrl(basename) : opds.opds.atob(basename);
-
-						if(!/^https?:/.test(url))
-						{
-							url = p.join(dirname, url);
-							url = posixPath(url).replace(/^opdsf/, 'http');
-						}
+						const url = opds.opds.downloadUrl(path);
 
 						try
 						{

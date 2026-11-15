@@ -258,10 +258,13 @@ async function readFilesIndexPage(path, mainPath, fromGoBack, notAutomaticBrowsi
 		files: files,
 	};
 
+	if(!fromGoBack && !fromGoForwards && !notAutomaticBrowsing)
+		await reading.sync.pull(path);
+
 	// Get comic reading progress image
 	let _readingProgress = relative.get('readingProgress');
-	let readingProgress = _readingProgress[mainPath]?.path ? _readingProgress[mainPath] : false;
-	let readingProgressCurrentPath = (mainPath != path) ? (_readingProgress[path]?.path ? _readingProgress[path] : false) : false;
+	const readingProgressCurrentPath = (mainPath != path) ? (_readingProgress[path]?.path ? _readingProgress[path] : false) : false;
+	let readingProgress = readingProgressCurrentPath || (_readingProgress[mainPath]?.path ? _readingProgress[mainPath] : false);
 
 	// const isCompressed = fileManager.isCompressed(fileManager.firstCompressedFile(path));
 	const isCompressed = fileManager.isCompressed(path);
@@ -273,17 +276,8 @@ async function readFilesIndexPage(path, mainPath, fromGoBack, notAutomaticBrowsi
 
 	if(openContinueReading && !fromGoBack && !notAutomaticBrowsing && readingProgress)
 	{
-		const isParentPath = fileManager.isParentPath(path, readingProgress.path);
-
-		if(isParentPath || readingProgressCurrentPath)
-		{
-			if(!isParentPath && readingProgressCurrentPath)
-				readingProgress = readingProgressCurrentPath;
-		}
-		else
-		{
+		if(!readingProgressCurrentPath && !fileManager.isParentPath(path, readingProgress.path))
 			openContinueReading = false;
-		}
 
 		if(openContinueReading && !fileManager.simpleExists(readingProgress.path))
 			openContinueReading = false;
@@ -1496,6 +1490,10 @@ function headerPath(path, mainPath, windowTitle = false)
 
 async function nextComic(path, mainPath)
 {
+	// OPDS feeds aren't folders of files, only a sync provider knows the neighbouring chapters
+	if(fileManager.isOpdsFile(path))
+		return reading.sync.next(path);
+
 	let file = fileManager.file(mainPath, {cacheServer: true, subtask: true});
 	let image = await file.images(1, path);
 	file.destroy();
@@ -1505,6 +1503,9 @@ async function nextComic(path, mainPath)
 
 async function previousComic(path, mainPath)
 {
+	if(fileManager.isOpdsFile(path))
+		return reading.sync.previous(path);
+
 	let file = fileManager.file(mainPath, {cacheServer: true, subtask: true});
 	let image = await file.images(-1, path);
 	file.destroy();
@@ -1518,7 +1519,7 @@ async function goNextComic(path, mainPath)
 
 	if(_nextComic)
 	{
-		dom.loadIndexPage(true, p.dirname(_nextComic), false, false, history.mainPath, false, true);
+		dom.loadIndexPage(true, compatible.image(_nextComic) ? p.dirname(_nextComic) : _nextComic, false, false, history.mainPath, false, true);
 	}
 }
 
@@ -1528,7 +1529,7 @@ async function goPrevComic(path, mainPath)
 
 	if(prevComic)
 	{
-		dom.loadIndexPage(true, p.dirname(prevComic), false, false, history.mainPath, false, true);
+		dom.loadIndexPage(true, compatible.image(prevComic) ? p.dirname(prevComic) : prevComic, false, false, history.mainPath, false, true);
 	}
 }
 
@@ -3094,8 +3095,10 @@ async function openComic(animation = true, path = true, mainPath = true, end = f
 
 	file.destroy();
 
-	skipNextComic = await nextComic(path, mainPath);
-	skipPreviousComic = await previousComic(path, mainPath);
+	[skipNextComic, skipPreviousComic] = await Promise.all([
+		nextComic(path, mainPath),
+		previousComic(path, mainPath),
+	]);
 
 	// The user has gone back before finishing loading
 	if(!onReading)
@@ -3183,6 +3186,10 @@ async function openComic(animation = true, path = true, mainPath = true, end = f
 		if(comics[i].path == imagePath)
 			indexStart = comics[i].index;
 	}
+
+	// The previous comic can be a whole book rather than its last image, going back still lands on its last page
+	if(!startImage && end && comics.length)
+		indexStart = comics.length;
 
 	// Fallback: https://github.com/ollm/OpenComic/issues/636
 	// if(startImage && indexStart === 1 && readingProgress?.index >= 1 && readingProgress.index <= comics.length)

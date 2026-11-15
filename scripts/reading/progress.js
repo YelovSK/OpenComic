@@ -1,3 +1,5 @@
+const sync = require(p.join(appDir, '.dist/reading/sync.js'));
+
 var saveIsActive = false;
 
 function save(path = false, mainPath = false, hasKnownChildren = false)
@@ -82,6 +84,9 @@ function save(path = false, mainPath = false, hasKnownChildren = false)
 		percent: !isParent ? percent : 0, // Calculate from childrens if is parent
 		completed: !isParent ? (currentPage >= totalPages) : false, // Calculate from childrens if is parent
 	});
+
+	if(!isParent && !reading.isEbook())
+		sync.push(mainPath, currentPage, totalPages);
 
 	dom.history.updateLastComic(path);
 
@@ -335,6 +340,8 @@ async function read(path)
 				completed: true,
 			}
 		};
+
+		sync.push(path, pages, pages);
 	}
 
 	storage.set('readingProgress', readingProgress);
@@ -355,6 +362,8 @@ async function unread(path)
 		progress.page = 0;
 		progress.percent = 0;
 		progress.completed = false;
+
+		sync.push(path, 0, progress.pages);
 	}
 
 	storage.set('readingProgress', readingProgress);
