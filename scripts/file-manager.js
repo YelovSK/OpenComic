@@ -3274,8 +3274,14 @@ function realPath(path, index = 0, prefixes = false)
 
 	for(let i = 1; i < len; i++)
 	{
-		newPath = p.join(newPath, segments[i]);
-		virtualPath = p.join(virtualPath, segments[i]);
+		const segment = segments[i];
+
+		newPath = p.join(newPath, segment);
+		virtualPath = p.join(virtualPath, segment);
+
+		// Server segments can be long encoded URLs (e.g. OPDS) and native libraries (e.g. 7-Zip) fail on paths over 260 characters
+		if(_isServer && newPath.length > 200)
+			newPath = p.join(tempFolder, 'server-'+sha1(virtualPath)+p.extname(segment));
 
 		if(i < numSegments)
 		{
