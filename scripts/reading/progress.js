@@ -13,7 +13,7 @@ function save(path = false, mainPath = false, hasKnownChildren = false)
 	if(!path)
 	{
 		const image = reading.getImage(reading.currentPage());
-		path = p.normalize(image.path);
+		path = serverClient.fixStart(p.normalize(image.path));
 	}
 
 	const folderPath = p.dirname(path);
@@ -35,7 +35,7 @@ function save(path = false, mainPath = false, hasKnownChildren = false)
 			const hasKnownChildren = !isLastFolder; // Only the deepest folder may or may not contain child folders. All parent folders always have at least one child folder.
 
 			const segment = segments[i];
-			currentFolderPath = p.join(currentFolderPath, segment);
+			currentFolderPath = serverClient.fixStart(p.join(currentFolderPath, segment));
 
 			if(mainPath !== currentFolderPath)
 				save(path, currentFolderPath, hasKnownChildren);
