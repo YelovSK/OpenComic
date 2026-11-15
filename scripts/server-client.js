@@ -1655,11 +1655,13 @@ var client = function(path) {
 							}
 							else
 							{
+								console.error('OPDS download failed: '+response.status+' '+response.statusText, url);
 								error = true;
 							}
 						}
-						catch
+						catch(_error)
 						{
+							console.error('OPDS download failed', url, _error);
 							error = true;
 						}
 
