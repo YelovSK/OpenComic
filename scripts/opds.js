@@ -640,6 +640,8 @@ async function download(link = false)
 
 		if(!fs.existsSync(downloadPath))
 		{
+			fs.mkdirSync(downloadOpdsFolder, {recursive: true});
+
 			const response = await auth.fetch(link.url);
 
 			if(response.ok)
